@@ -1,2 +1,2 @@
-#MAZE RUNNER
+# MAZE RUNNER
 ## Felix El-hoiydi
