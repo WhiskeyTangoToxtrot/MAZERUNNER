@@ -21,17 +21,15 @@ void initialize_maze(vector<vector<int>> &maze, vector<int> input);
 void display_maze(vector<vector<int>> maze);
 
 vector<int> get_input();
+void verifie_input(vector<int> &input);
 
 int main()
 {
     vector<int> input = get_input();
-    for (auto elem : input)
-    {
-        cout << elem << " ";
-    }
-    cout << endl;
+    verifie_input(input);
 
     vector<vector<int>> maze;
+
     initialize_maze(maze, input);
     display_maze(maze);
     return 0;
@@ -41,12 +39,6 @@ void initialize_maze(vector<vector<int>> &maze, vector<int> input)
 {
     int rows = input[0];
     int cols = input[1];
-
-    if (rows < 2 || cols < 2)
-    {
-        print_error(TOO_SMALL);
-        exit(EXIT_FAILURE);
-    }
 
     // init border
     for (int i = 0; i < rows; i++)
@@ -66,25 +58,25 @@ void initialize_maze(vector<vector<int>> &maze, vector<int> input)
         }
         maze.push_back(v);
     }
-    /*
-     int beginx = input[2];
-    int beginy = input[3];
-    int endx = input[4];
-    int endy = input[5];
+    /*int Ax = input[2];
+    int Ay = input[3];
+    int Bx = input[4];
+    int By = input[5];
 
-    maze[beginx][beginy] = 3;
+    maze[Ax][beginy] = 3;
     maze[endx][endy] = 4;
 
+    int
     // init obstacle
-    for (int i = 7; i < 7 + input[6] * 2; i += 2)
+    for (int i = 0; i < nbP; i++)
     {
-        int x = input[i];
-        int y = input[i + 1];
+        int x = input[i * 2 + 7];
+        int y = input[i * 2 + 8];
 
         maze[x][y] = -1;
     }
-    */
     // init begin end
+    */
 }
 
 void display_maze(vector<vector<int>> maze)
@@ -138,14 +130,76 @@ vector<int> get_input()
         cin >> a;
         input.push_back(a);
     }
-    int nobstacle;
-    cin >> nobstacle;
-    input.push_back(nobstacle);
-    for (int i = 0; i < nobstacle; i++)
+    int nbP;
+    cin >> nbP;
+    input.push_back(nbP);
+    for (int i = 0; i < nbP * 2; i++)
     {
         cin >> a;
         input.push_back(a);
     }
 
     return input;
+}
+
+void verifie_input(vector<int> &input)
+{
+    int nbC = input[0];
+    int nbL = input[1];
+    // TOO_SMALL
+    if (nbL <= 2 || nbC <= 2)
+    {
+        print_error(TOO_SMALL);
+    }
+    // BAD_LOCATION
+    int nbP = input[6];
+    for (int i = 0; i < nbP; i++)
+    {
+        int x = input[i * 2 + 7];
+        int y = input[i * 2 + 8];
+        if (!((x < nbC - 1) && (x > 0) && (y < nbL - 1) && (y > 0)))
+        {
+            print_error(BAD_LOCATION, true, x, y);
+        }
+    }
+    // OVERLAP_AB
+    int Ax = input[2];
+    int Ay = input[3];
+    int Bx = input[4];
+    int By = input[5];
+    if ((Ax == By) && (Ay == By))
+    {
+        print_error(OVERLAP_AB);
+    }
+    // OVERLAP_FULL
+    for (int i = 0; i < nbP; i++)
+    {
+        int x1 = input[i * 2 + 7];
+        int y1 = input[i * 2 + 8];
+
+        for (int j = 0; j < nbP; j++)
+        {
+            if (i == j)
+            {
+                continue;
+            }
+
+            int x2 = input[j * 2 + 7];
+            int y2 = input[j * 2 + 8];
+            if ((x1 == x2) && (y1 == y2))
+            {
+                print_error(OVERLAP_FULL, true, x1, y1);
+            }
+        }
+    }
+    // OVERLAP_AB_FULL
+    for (int i = 0; i < nbP; i++)
+    {
+        int x = input[i * 2 + 7];
+        int y = input[i * 2 + 8];
+        if ((Ax == x) && (Ay == y) || (Bx == x) && (By == y))
+        {
+            print_error(OVERLAP_AB_FULL, true, x, y);
+        }
+    }
 }
