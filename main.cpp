@@ -19,14 +19,19 @@ const string NO_SOLUTION("No path from start to end cells");
 void print_error(string message, bool with_cell = false, unsigned i = 0, unsigned j = 0);
 //########################################################################################
 
+//global variable
+int A_x;
+int A_y;
+int B_x;
+int B_y;
 
+//prototype
 void initialize_maze(vector<vector<char>> &maze, vector<int> &input);
-
+void step_rec(vector<vector<char>> &maze,vector<vector<int>> &priority_queue, int &current_y, int &current_x);
 void display_maze(vector<vector<char>> &maze);
+void solve(vector<vector<char>> maze);
 
 vector<int> get_input();
-
-void verifie_input(vector<int> &input);
 
 int main() {
     std::chrono::time_point<std::chrono::system_clock> start, end;
@@ -41,7 +46,9 @@ int main() {
     initialize_maze(maze, input);
 
     display_maze(maze);
-//########################################################################################
+
+    solve(maze);
+    //########################################################################################
 
     end = std::chrono::system_clock::now();
 
@@ -50,28 +57,66 @@ int main() {
 
     std::cout << "finished computation at " << std::ctime(&end_time)
               << "elapsed time: " << elapsed_seconds.count() << "s\n";
+
+
     return 0;
 }
+
+
+void solve(vector<vector<char>> maze) {
+    maze[A_y][A_x] = 0;
+    vector<vector<int>> priority_queue = {{A_y,A_x}};
+    step_rec(maze,priority_queue,A_y,A_x);
+}
+
+void step_rec(vector<vector<char>> &maze,vector<vector<int>> &priority_queue,int &current_y,int &current_x){
+    int current_value = maze[priority_queue[0]]
+    if(maze[current_y+1][current_x] = ' '){
+        priority_queue.push_back({current_y+1,current_x,1})
+    }
+}
+
+/*
+vector<vector<unsigned int>> get_empty_cells(vector<vector<char>> &maze) {
+    vector<vector<unsigned int>> empty_cells;
+    unsigned int nb_row = maze.size();
+    unsigned int nb_col = maze[0].size();
+
+    for (unsigned int i_col = 0; i_col < nb_row; i_col++) {
+        for (unsigned int i_row = 0; i_row < nb_col; i_row++) {
+            if (maze[i_col][i_row] == ' ') {
+                empty_cells.push_back({i_col, i_row, UINT_MAX});
+            }
+        }
+    }
+    return empty_cells;
+}*/
+
 
 void initialize_maze(vector<vector<char>> &maze, vector<int> &input) {
     size_t nb_lines = maze.size();
     size_t nb_cols = maze[0].size();
 
     //TO_SMALL
-    if (nb_cols <= 2 || nb_lines <= 2) {
+    if (nb_cols < 3 || nb_lines < 3) {
         print_error(TOO_SMALL);
     }
 
     //OVERLAP_AB
-    int A_x = input[3];
-    int A_y = input[2];
-    int B_x = input[5];
-    int B_y = input[4];
+    A_x = input[3];
+    A_y = input[2];
+    B_x = input[5];
+    B_y = input[4];
 
     if (A_x == B_x && A_y == B_y) {
 
         print_error(OVERLAP_AB);
 
+    }
+    if (A_x == 0 || A_x == nb_cols - 1 || A_y == 0 || A_y == nb_lines - 1) {
+        print_error(OVERLAP_AB_FULL, true, A_y, A_x);
+    } else if (B_x == 0 || B_x == nb_cols - 1 || B_y == 0 || B_y == nb_lines - 1) {
+        print_error(OVERLAP_AB_FULL, true, B_y, B_x);
     }
 
     maze[A_y][A_x] = 'A';
@@ -102,7 +147,7 @@ void initialize_maze(vector<vector<char>> &maze, vector<int> &input) {
             if (current_value == '#') {
                 print_error(OVERLAP_FULL, true, i_line, i_row);
             }
-            //OVERLAP_AB_FULL
+            //OVERLAP_AB_FULL inner cells
             if (current_value == 'A' || current_value == 'B') {
                 print_error(OVERLAP_AB_FULL, true, i_line, i_row);
             }
@@ -116,6 +161,9 @@ void initialize_maze(vector<vector<char>> &maze, vector<int> &input) {
         }
     }
 }
+
+
+
 
 void display_maze(vector<vector<char>> &maze) {
     string maze_str = " ";
