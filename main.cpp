@@ -25,20 +25,54 @@ int A_y;
 int B_x;
 int B_y;
 //Priority_queue;
-vector<vector<int>> priority_queue = {};
-size_t pq_index = 0;
 
-vector<int> get_min_pq(vector<vector<int>> &priority_queue);
+class Priority_queue {
+public:
+    size_t get_pq_size() {
+        size_t s = queue.size();
+        return s - pq_index;
+    }
 
-int get_pq_size(vector<vector<int>> &priority_queue);
+    pair<int, int> extract_min() {
+        vector<pair<int, int>> queue_copy = queue;
+        size_t length = queue.size();
+        pair<int, int> node = queue_copy[0];
+
+        for (size_t i = 0; i < length - 1; i++) {
+            queue[i] = queue_copy[i + 1];
+        }
+        queue.pop_back();
+        return node;
+    }
+
+    void insert(pair<int, int> pair) {
+        queue.push_back(pair);
+    }
+
+private:
+    vector<pair<int, int>> queue;
+    size_t pq_index = 0;
+};
 
 //prototype
 void initialize_maze(vector<vector<int>> &maze, vector<int> &input);
 
 void display_maze(vector<vector<int>> &maze);
+
 void display_maze_int(vector<vector<int>> &maze);
 
-void solve(vector<vector<int>> &maze);
+void solve_dist(vector<vector<int>> &maze);
+
+void rec_path(vector<vector<int>> &maze, vector<string> &paths);
+
+void display_paths(vector<string> &paths);
+
+vector<string> find_shortest_paths(vector<vector<int>> &maze);
+
+void rec_path(vector<vector<int>> &maze, pair<int, int> current_node, vector<string> &paths);
+
+vector<pair<int, int>> get_neighbours(pair<int, int> &current_index_pair, vector<vector<int>> &maze);
+
 
 vector<int> get_input();
 
@@ -50,14 +84,20 @@ int main() {
 
     vector<int> input = get_input();
     const int nb_lines = input[0], nb_cols = input[1];
-    vector<vector<int>> maze(nb_lines, vector<int>(nb_cols, 0));
+    vector<vector<int>> maze(nb_lines, vector<int>(nb_cols, INT_MAX));
 
     initialize_maze(maze, input);
 
     display_maze(maze);
 
-    solve(maze);
-    display_maze_int(maze);
+    solve_dist(maze);
+
+    vector<string> paths = find_shortest_paths(maze);
+    display_maze(maze);
+
+    display_paths(paths);
+
+
     //########################################################################################
 
     end = std::chrono::system_clock::now();
@@ -72,78 +112,122 @@ int main() {
     return 0;
 }
 
-int get_pq_size(vector<vector<int>> &priority_queue) {
-    size_t s = priority_queue.size();
-    return s - pq_index;
+
+vector<pair<int, int>> get_neighbours(pair<int, int> &current_index_pair, vector<vector<int>> &maze) {
+    vector<pair<int, int>> neighbours_index_pair;
+    if (maze[current_index_pair.first + 1][current_index_pair.second] != -1) {
+        neighbours_index_pair.push_back({current_index_pair.first + 1, current_index_pair.second});
+    }
+    if (maze[current_index_pair.first][current_index_pair.second - 1] != -1) {
+        neighbours_index_pair.push_back({current_index_pair.first, current_index_pair.second - 1});
+    }
+    if (maze[current_index_pair.first][current_index_pair.second + 1] != -1) {
+        neighbours_index_pair.push_back({current_index_pair.first, current_index_pair.second + 1});
+    }
+    if (maze[current_index_pair.first - 1][current_index_pair.second] != -1) {
+        neighbours_index_pair.push_back({current_index_pair.first - 1, current_index_pair.second});
+    }
+    return neighbours_index_pair;
 }
 
-void solve(vector<vector<int>> &maze) {
-
-    maze[A_y][A_x] = 0;
-    priority_queue.push_back({A_y, A_x});
-    vector<int> current_node;
-    while (get_pq_size(priority_queue) > 0) {
-        current_node = get_min_pq(priority_queue);
-        int c_y = current_node[0];
-        int c_x = current_node[1];
-        int c_dist = maze[c_y][c_x];
-
-        if (!(maze[c_y + 1][c_x] == -1)) {
-            if(maze[c_y + 1][c_x] == 0){
-                priority_queue.push_back({c_y + 1, c_x});
-                maze[c_y + 1][c_x] = c_dist + 1;
-            }else if (maze[c_y + 1][c_x] > c_dist + 1){
-                priority_queue.push_back({c_y + 1, c_x});
-                maze[c_y + 1][c_x] = c_dist + 1;
-            }
-
-        }
-        if (!(maze[c_y][c_x - 1] == -1)) {
-            if(maze[c_y ][c_x-1] == 0){
-                priority_queue.push_back({c_y, c_x-1});
-                maze[c_y][c_x-1] = c_dist + 1;
-            }else if (maze[c_y][c_x-1] > c_dist + 1){
-                priority_queue.push_back({c_y, c_x-1});
-                maze[c_y][c_x-1] = c_dist + 1;
-            }
-        }
-        if (!(maze[c_y][c_x + 1] == -1)) {
-            if(maze[c_y ][c_x+1] == 0){
-                priority_queue.push_back({c_y, c_x+1});
-                maze[c_y][c_x+1] = c_dist + 1;
-            }else if (maze[c_y][c_x+1] > c_dist + 1){
-                priority_queue.push_back({c_y, c_x+1});
-                maze[c_y][c_x+1] = c_dist + 1;
-            }
-        }
-        if (!(maze[c_y - 1][c_x] == -1)) {
-            if(maze[c_y - 1][c_x] == 0){
-                priority_queue.push_back({c_y - 1, c_x});
-                maze[c_y - 1][c_x] = c_dist + 1;
-            }else if (maze[c_y - 1][c_x] > c_dist + 1){
-                priority_queue.push_back({c_y - 1, c_x});
-                maze[c_y - 1][c_x] = c_dist + 1;
-            }
-        }
+void display_paths(vector<string> &paths) {
+    string paths_str = "";
+    for (auto &path: paths) {
+        paths_str += path + "\n";
     }
+    cout << paths_str;
 }
 
 
-/*
-vector<vector<unsigned int>> get_empty_cells(vector<vector<char>> &maze) {
-    vector<vector<unsigned int>> empty_cells;
-    unsigned int nb_row = maze.size();
-    unsigned int nb_col = maze[0].size();
-
-    for (unsigned int i_col = 0; i_col < nb_row; i_col++) {
-        for (unsigned int i_row = 0; i_row < nb_col; i_row++) {
-            if (maze[i_col][i_row] == ' ') {
-                empty_cells.push_back({i_col, i_row, UINT_MAX});
+void solve_dist(vector<vector<int>> &maze) {
+    Priority_queue pq;
+    maze[B_y][B_x] = 0;
+    pq.insert({B_y, B_x});
+    pair<int, int> current_node;
+    while (pq.get_pq_size() > 0) {
+        current_node = pq.extract_min();
+        int c_dist = maze[current_node.first][current_node.second];
+        vector<pair<int, int>> neighbours_index_pair = get_neighbours(current_node, maze);
+        for (size_t i = 0; i < neighbours_index_pair.size(); i++) {
+            int n_y = neighbours_index_pair[i].first, n_x = neighbours_index_pair[i].second;
+            if (maze[n_y][n_x] > c_dist + 1) {
+                pq.insert({n_y, n_x});
+                maze[n_y][n_x] = c_dist + 1;
             }
         }
     }
-    return empty_cells;
-}*/
+
+
+    if (maze[A_y][A_x] == INT_MAX) {
+        print_error(NO_SOLUTION);
+    }
+}
+
+vector<string> find_shortest_paths(vector<vector<int>> &maze) {
+    vector<string> paths = {""};
+    pair<int, int> current_node = {A_y, A_x};
+    rec_path(maze, current_node, paths);
+    return paths;
+}
+
+void rec_path(vector<vector<int>> &maze, pair<int, int> current_node, vector<string> &paths) {
+    if (current_node.first == B_y && current_node.second == B_x) {
+        return;
+    }
+    vector<pair<int, int>> neighbours_index_pair = get_neighbours(current_node, maze);
+    int min_dist = INT_MAX;
+    for (size_t i = 0; i < neighbours_index_pair.size(); i++) {
+        int n_y = neighbours_index_pair[i].first;
+        int n_x = neighbours_index_pair[i].second;
+        if (maze[n_y][n_x] < min_dist && maze[n_y][n_x] >= 0) {
+            min_dist = maze[n_y][n_x];
+        }
+    }
+
+    int c_y = current_node.first;
+    int c_x = current_node.second;
+    string current_path = paths.back();
+
+    int nb_sub_path = 0;
+    if (maze[c_y + 1][c_x] == min_dist) {
+        nb_sub_path++;
+        paths.back() += 'D';
+        rec_path(maze, {c_y + 1, c_x}, paths);
+    }
+
+    if (maze[c_y][c_x - 1] == min_dist) {
+        nb_sub_path++;
+        if (nb_sub_path > 1) {
+            paths.push_back(current_path + 'L');
+
+        } else {
+            paths.back() += 'L';
+        }
+        rec_path(maze, {c_y, c_x - 1}, paths);
+    }
+
+    if (maze[c_y][c_x + 1] == min_dist) {
+        nb_sub_path++;
+
+        if (nb_sub_path > 1) {
+            paths.push_back(current_path + 'R');
+
+        } else {
+            paths.back() += 'R';
+        }
+        rec_path(maze, {c_y, c_x + 1}, paths);
+    }
+
+    if (maze[c_y - 1][c_x] == min_dist) {
+        nb_sub_path++;
+        if (nb_sub_path > 1) {
+            paths.push_back(current_path + 'U');
+        } else {
+            paths.back() += 'U';
+        }
+        rec_path(maze, {c_y - 1, c_x}, paths);
+    }
+}
 
 
 void initialize_maze(vector<vector<int>> &maze, vector<int> &input) {
@@ -191,52 +275,65 @@ void initialize_maze(vector<vector<int>> &maze, vector<int> &input) {
 
 
         //CHECK INPUT
-        char current_value = maze[i_line][i_row];
-        if (current_value != 0) {
-            //OVERLAP_FULL
-            if (current_value == -1) {
-                print_error(OVERLAP_FULL, true, i_line, i_row);
-            }
-            //OVERLAP_AB_FULL inner cells
-            if (i_line == A_y && i_row == A_x || i_line == B_y && i_row == B_x) {
-                print_error(OVERLAP_AB_FULL, true, i_line, i_row);
-            }
-        } else {
-            //BAD_LOCATION
-            if (i_row < 0 || i_row > nb_cols - 1 || i_line < 0 || i_line > nb_lines - 1) {
-                print_error(BAD_LOCATION, true, i_line, i_row);
-            }
-            maze[i_line][i_row] = -1;
+        int current_value = maze[i_line][i_row];
 
+        //OVERLAP_FULL
+        if (current_value < 0) {
+            print_error(OVERLAP_FULL, true, i_line, i_row);
         }
+        //OVERLAP_AB_FULL inner cells
+        if (i_line == A_y && i_row == A_x || i_line == B_y && i_row == B_x) {
+            print_error(OVERLAP_AB_FULL, true, i_line, i_row);
+        }
+
+        //BAD_LOCATION
+        if (i_row < 0 || i_row > nb_cols - 1 || i_line < 0 || i_line > nb_lines - 1) {
+            print_error(BAD_LOCATION, true, i_line, i_row);
+        }
+        maze[i_line][i_row] = -1;
+
+
     }
 }
 
 
 void display_maze(vector<vector<int>> &maze) {
     size_t nb_cols = maze[0].size();
-    string maze_str = " ";
+    string maze_str = "";
     for (auto &row: maze) {
         for (auto &cell: row) {
-            if(cell == -1){
+            if (cell == -1) {
                 maze_str += '#';
-            }else if(cell == 0){
+            } else if (cell == -2) {
+                maze_str += '* ';
+            } else {
                 maze_str += ' ';
             }
 
         }
         maze_str.append("\n");
     }
-    maze_str[A_y*(nb_cols+1) + A_x+1] = 'A';
-    maze_str[B_y*(nb_cols+1) + B_x+1] = 'B';
+    maze_str[A_y * (nb_cols + 1) + A_x] = 'A';
+    maze_str[B_y * (nb_cols + 1) + B_x] = 'B';
     cout << maze_str;
 }
 
 void display_maze_int(vector<vector<int>> &maze) {
-    string maze_str = " ";
+    string maze_str = "";
     for (auto &row: maze) {
         for (auto &cell: row) {
-           maze_str+= to_string(cell);
+            if (cell == -1) {
+                maze_str += "#  ";
+            } else {
+                if (cell / 10 == 0) {
+                    maze_str += to_string(cell) + "  ";
+                } else {
+                    maze_str += to_string(cell) + " ";
+                }
+
+            }
+
+
         }
         maze_str.append("\n");
     }
@@ -272,15 +369,4 @@ vector<int> get_input() {
     }
 
     return input;
-}
-
-vector<int> get_min_pq(vector<vector<int>> &priority_queue) {
-    if (!(pq_index < priority_queue.size())) {
-        cout << "priority_queue error";
-        exit(0);
-    }
-
-    vector<int> node = priority_queue[pq_index];
-    pq_index++;
-    return node;
 }
