@@ -6,6 +6,8 @@
 #include <string>
 #include <chrono>
 
+#define INT_MAX 2147483647
+
 ////////////////////////////////////////////////////////////////////////////////////
 // NAMESPACE
 ////////////////////////////////////////////////////////////////////////////////////
@@ -26,7 +28,7 @@ const string OVERLAP_AB_FULL("Error: overlap of start or end cells is not allowe
 const string NO_SOLUTION("No path from start to end cells");
 
 // prototype de la fonction d'affichage de message d'error
-void print_error(string message, bool with_cell = false,
+void print_error(const string &message, bool with_cell = false,
                  unsigned i = 0, unsigned j = 0);
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -38,7 +40,7 @@ int A_x;
 int A_y;
 int B_x;
 int B_y;
-
+vector<vector<int>> mazeWithPath;
 ////////////////////////////////////////////////////////////////////////////////////
 // CLASS
 ////////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +79,6 @@ void initialize_maze(vector<vector<int>> &maze, vector<int> &input);
 
 void display_maze(vector<vector<int>> &maze);
 
-void display_maze_int(vector<vector<int>> &maze);
 
 void solve_dist(vector<vector<int>> &maze);
 
@@ -104,17 +105,18 @@ int main() {
 ////////////////////////////////////////////////////////////////////////////////////
 
     vector<int> input = get_input();
+
     const int nb_lines = input[0], nb_cols = input[1];
     vector<vector<int>> maze(nb_lines, vector<int>(nb_cols, INT_MAX));
-
     initialize_maze(maze, input);
-
+    mazeWithPath = maze;
     display_maze(maze);
 
     solve_dist(maze);
 
     vector<string> paths = find_shortest_paths(maze);
-    display_maze(maze);
+
+    display_maze(mazeWithPath);
 
     display_paths(paths);
 
@@ -222,13 +224,13 @@ void initialize_maze(vector<vector<int>> &maze, vector<int> &input) {
 
 void display_maze(vector<vector<int>> &maze) {
     size_t nb_cols = maze[0].size();
-    string maze_str = "";
+    string maze_str;
     for (auto &row: maze) {
         for (auto &cell: row) {
             if (cell == -1) {
                 maze_str += '#';
             } else if (cell == -2) {
-                maze_str += '* ';
+                maze_str += '*';
             } else {
                 maze_str += ' ';
             }
@@ -251,8 +253,8 @@ void solve_dist(vector<vector<int>> &maze) {
         int c_dist = maze[current_node.first][current_node.second];
         vector<pair<int, int>> neighbours_index_pair = get_neighbours(current_node,
                                                                       maze);
-        for (size_t i = 0; i < neighbours_index_pair.size(); i++) {
-            int n_y = neighbours_index_pair[i].first, n_x = neighbours_index_pair[i].second;
+        for (auto &pair: neighbours_index_pair) {
+            int n_y = pair.first, n_x = pair.second;
             if (maze[n_y][n_x] > c_dist + 1) {
                 pq.insert({n_y, n_x});
                 maze[n_y][n_x] = c_dist + 1;
@@ -273,23 +275,23 @@ vector<string> find_shortest_paths(vector<vector<int>> &maze) {
 
 void rec_path(vector<vector<int>> &maze, pair<int, int> current_node,
               vector<string> &paths) {
-    if (current_node.first == B_y && current_node.second == B_x) {
+    int c_y = current_node.first;
+    int c_x = current_node.second;
+    mazeWithPath[c_y][c_x] = -2;
+    if (c_y == B_y && c_x == B_x) {
         return;
     }
     vector<pair<int, int>> neighbours_index_pair = get_neighbours(current_node, maze);
+
     int min_dist = INT_MAX;
-    for (size_t i = 0; i < neighbours_index_pair.size(); i++) {
-        int n_y = neighbours_index_pair[i].first;
-        int n_x = neighbours_index_pair[i].second;
-        if (maze[n_y][n_x] < min_dist && maze[n_y][n_x] >= 0) {
+    for (auto &pair: neighbours_index_pair) {
+        int n_y = pair.first;
+        int n_x = pair.second;
+        if ((maze[n_y][n_x] >= 0) && (maze[n_y][n_x] < min_dist)) {
             min_dist = maze[n_y][n_x];
         }
     }
-
-    int c_y = current_node.first;
-    int c_x = current_node.second;
     string current_path = paths.back();
-
     int nb_sub_path = 0;
     if (maze[c_y + 1][c_x] == min_dist) {
         nb_sub_path++;
@@ -355,7 +357,7 @@ vector<pair<int, int>> get_neighbours(pair<int, int> &current_index_pair,
 
 
 void display_paths(vector<string> &paths) {
-    string paths_str = "";
+    string paths_str;
     for (auto &path: paths) {
         paths_str += path + "\n";
     }
@@ -363,29 +365,7 @@ void display_paths(vector<string> &paths) {
 }
 
 
-void display_maze_int(vector<vector<int>> &maze) {
-    string maze_str = "";
-    for (auto &row: maze) {
-        for (auto &cell: row) {
-            if (cell == -1) {
-                maze_str += "#  ";
-            } else {
-                if (cell / 10 == 0) {
-                    maze_str += to_string(cell) + "  ";
-                } else {
-                    maze_str += to_string(cell) + " ";
-                }
-
-            }
-
-
-        }
-        maze_str.append("\n");
-    }
-    cout << maze_str;
-}
-
-void print_error(string message, bool with_cell, unsigned i, unsigned j) {
+void print_error(const string &message, bool with_cell, unsigned i, unsigned j) {
     cout << message;
 
     if (with_cell) {
