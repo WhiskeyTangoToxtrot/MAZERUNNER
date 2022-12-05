@@ -132,9 +132,9 @@ void initialize_maze(vector<int> &input) {
 
         int current_value = maze[i_line][i_row];
 
+        check_bad_location(i_line, i_row);
         check_overlap_full(current_value, i_line, i_row);
         check_overlap_ab_full_inner(i_line, i_row);
-        check_bad_location(i_line, i_row);
 
         //init inner walls
         maze[i_line][i_row] = -1;
@@ -175,7 +175,7 @@ void check_overlap_ab_full_inner(int &i_line, int &i_row) {
 
 void check_bad_location(int &i_line, int &i_row) {
     if (i_row <= 0 || i_row >= nb_cols - 1 || i_line <= 0 || i_line >= nb_lines - 1) {
-        print_error(BAD_LOCATION, true, i_row, i_line);
+        print_error(BAD_LOCATION, true, i_line, i_row);
     }
 }
 
@@ -284,7 +284,7 @@ void rec_path(pair<int, int> current_node) {
     string current_path = paths.back();
     int nb_sub_path = 0;
 
-    sub_path({c_y - 1, c_x}, min_dist,
+    sub_path({c_y + 1, c_x}, min_dist,
              nb_sub_path, current_path, 'D');
 
     sub_path({c_y, c_x - 1}, min_dist,
@@ -293,7 +293,7 @@ void rec_path(pair<int, int> current_node) {
     sub_path({c_y, c_x + 1}, min_dist,
              nb_sub_path, current_path, 'R');
 
-    sub_path({c_y + 1, c_x}, min_dist,
+    sub_path({c_y - 1, c_x}, min_dist,
              nb_sub_path, current_path, 'U');
 }
 
