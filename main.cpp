@@ -4,7 +4,6 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <chrono>
 
 #define INT_MAX 2147483647
 
@@ -99,10 +98,6 @@ vector<int> get_input();
 ////////////////////////////////////////////////////////////////////////////////////
 
 int main() {
-    std::chrono::time_point<std::chrono::system_clock> start, end;
-    start = std::chrono::system_clock::now();
-
-////////////////////////////////////////////////////////////////////////////////////
 
     vector<int> input = get_input();
 
@@ -119,18 +114,6 @@ int main() {
     display_maze(mazeWithPath);
 
     display_paths(paths);
-
-
-////////////////////////////////////////////////////////////////////////////////////
-
-    end = std::chrono::system_clock::now();
-
-    std::chrono::duration<double> elapsed_seconds = end - start;
-    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-
-    std::cout << "finished computation at " << std::ctime(&end_time)
-              << "elapsed time: " << elapsed_seconds.count() << "s\n";
-
 
     return 0;
 }
@@ -240,7 +223,7 @@ void display_maze(vector<vector<int>> &maze) {
     }
     maze_str[A_y * (nb_cols + 1) + A_x] = 'A';
     maze_str[B_y * (nb_cols + 1) + B_x] = 'B';
-    cout << maze_str;
+    cout << maze_str<<endl;
 }
 
 void solve_dist(vector<vector<int>> &maze) {
