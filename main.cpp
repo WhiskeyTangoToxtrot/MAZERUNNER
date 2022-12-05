@@ -174,8 +174,8 @@ void check_overlap_ab_full_inner(int &i_line, int &i_row) {
 }
 
 void check_bad_location(int &i_line, int &i_row) {
-    if (i_row < 0 || i_row > nb_cols - 1 || i_line < 0 || i_line > nb_lines - 1) {
-        print_error(BAD_LOCATION, true, i_line, i_row);
+    if (i_row <= 0 || i_row >= nb_cols - 1 || i_line <= 0 || i_line >= nb_lines - 1) {
+        print_error(BAD_LOCATION, true, i_row, i_line);
     }
 }
 
@@ -200,7 +200,7 @@ void display_maze(vector<vector<int>> &maze_to_display) {
             if (cell == -1) {
                 maze_str += '#';
             } else if (cell == -2) {
-                maze_str += '*';
+                maze_str += '.';
             } else {
                 maze_str += ' ';
             }
